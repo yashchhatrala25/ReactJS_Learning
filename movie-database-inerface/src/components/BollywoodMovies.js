@@ -39,7 +39,7 @@ const bollywoodMovies = [
     title: "Pushpa 2",
     rating: 9.5,
     genre: "Action",
-    year: 2025,
+    year: 2027,
     director: "Sukumar",
     image:
       "https://cinetvartistcard.com/wp-content/uploads/2024/12/img_8803-1.jpg",
@@ -69,11 +69,27 @@ const BollywoodMovies = () => {
   const [sortBy, setSortBy] = useState("title");
 
   const getRatingCategory = (rating) => {
-    if (rating >= 9.0) return 'blockbuster';
-    if (rating >= 8.5) return 'superhit';
-    if (rating >= 7.5) return 'hit';
-    return 'average';
-  }
+    if (rating >= 9.0) return "blockbuster";
+    if (rating >= 8.5) return "superhit";
+    if (rating >= 7.5) return "hit";
+    return "average";
+  };
+
+  const filteredMovies = movies.filter((movie) => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      movie.title.toLowerCase().includes(searchLower) ||
+      movie.genre.toLowerCase().includes(searchLower) ||
+      movie.director.toLowerCase().includes(searchLower) ||
+      movie.cast.some((actor) => actor.toLowerCase().includes(searchLower)) ||
+      movie.year.toString().includes(searchTerm);
+
+    const matchesGenre =
+      selectedGenre === "All" || movie.genre === selectedGenre;
+    return matchesSearch && matchesGenre;
+  });
+
+  const genres = ["All", ...new Set(movies.map((movie) => movie.genre))];
 
   // { condition && <Component/> }
   // condition ? valueIfTrue : valueIfFalse
@@ -87,22 +103,85 @@ const BollywoodMovies = () => {
         </div>
       ) : (
         <div className="main-content">
-          <div className="movies-grid">
-            {movies.map((movie) => (
-              <div className={`movie-card ${getRatingCategory(movie.rating)}`} kay={movie.id}>
-                <img
-                  src={movie.image}
-                  alt={`${movie.title} poster`}
-                  className="movie-image"
-                />
-                <h3 className="movie-title">{movie.title}</h3>
-                <p className="movie-year">{movie.year}</p>
-                <p className="movie-genre">{movie.genre}</p>
-                <p className="movie-director">Dir: {movie.director}</p>
-                <p className="movie-cast">Cast: {movie.cast.join(', ')}</p>
-                <div className={`movie-rating rating-${getRatingCategory(movie.rating)}`}>{movie.rating}/10</div>
-              </div>
+          <div className="search-section">
+            <input
+              type="text"
+              placeholder="Search Bollywood movies..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+
+            {searchTerm && (
+              <p className="search-results">
+                Founded {filteredMovies.length} movie
+                {filteredMovies.length !== 1 ? "s" : ""} for "{searchTerm}"
+              </p>
+            )}
+          </div>
+
+          <div className="filter-section">
+            <h4>Filter by Gener:</h4>
+            <div className="genre-buttons">
+              {genres.map((genre) => (
+                <button
+                  key={genre}
+                  className={`genre-button ${selectedGenre === genre ? "active" : ""}`}
+                  onClick={() => setSelectedGenre(genre)}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {searchTerm ||
+            (selectedGenre !== "All" && (
+              <button
+                className="clear-filters"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedGenre("All");
+                }}
+              >
+                Clear All Filters
+              </button>
             ))}
+
+          <div className="movies-grid">
+            {filteredMovies.length > 0 ? (
+              filteredMovies.map((movie) => (
+                <div
+                  className={`movie-card ${getRatingCategory(movie.rating)}`}
+                  kay={movie.id}
+                >
+                  <img
+                    src={movie.image}
+                    alt={`${movie.title} poster`}
+                    className="movie-image"
+                  />
+                  <h3 className="movie-title">{movie.title}</h3>
+                  <p className="movie-year">{movie.year}</p>
+                  <p className="movie-genre">{movie.genre}</p>
+                  <p className="movie-director">Dir: {movie.director}</p>
+                  <p className="movie-cast">Cast: {movie.cast.join(", ")}</p>
+                  <div
+                    className={`movie-rating rating-${getRatingCategory(movie.rating)}`}
+                  >
+                    {movie.rating}/10
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <h3>No Bollywood movies found!</h3>
+                <p>
+                  {searchTerm || selectedGenre !== "All"
+                    ? "Try adjusting your search or filter criteria"
+                    : "Start searching to find amazing Bollywood movies!"}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
