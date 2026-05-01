@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "./BollywoodMovies.css";
 
 const bollywoodMovies = [
@@ -75,19 +75,65 @@ const BollywoodMovies = () => {
     return "average";
   };
 
-  const filteredMovies = movies.filter((movie) => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch =
-      movie.title.toLowerCase().includes(searchLower) ||
-      movie.genre.toLowerCase().includes(searchLower) ||
-      movie.director.toLowerCase().includes(searchLower) ||
-      movie.cast.some((actor) => actor.toLowerCase().includes(searchLower)) ||
-      movie.year.toString().includes(searchTerm);
+  // const filteredMovies = movies.filter((movie) => {
+  //   const searchLower = searchTerm.toLowerCase();
+  //   const matchesSearch =
+  //     movie.title.toLowerCase().includes(searchLower) ||
+  //     movie.genre.toLowerCase().includes(searchLower) ||
+  //     movie.director.toLowerCase().includes(searchLower) ||
+  //     movie.cast.some((actor) => actor.toLowerCase().includes(searchLower)) ||
+  //     movie.year.toString().includes(searchTerm);
 
-    const matchesGenre =
-      selectedGenre === "All" || movie.genre === selectedGenre;
-    return matchesSearch && matchesGenre;
-  });
+  //   const matchesGenre =
+  //     selectedGenre === "All" || movie.genre === selectedGenre;
+  //   return matchesSearch && matchesGenre;
+  // });
+
+  // const sortedAndFilteredMovies = filteredMovies.sort((a,b) => {
+  //   switch(sortBy) {
+  //     case 'rating':
+  //       return b.rating - a.rating;
+  //     case 'year':
+  //       return b.year - a.year;
+  //     case 'genre':
+  //       return a.genre.localeCompare(b.genre);
+  //     case 'title':
+  //     default:
+  //       return a.title.localeCompare(b.title);
+  //   }
+  // })
+
+  const sortedAndFilteredMovies = useMemo(() => {
+    // Filter movies first
+    const filtered = movies.filter((movie) => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        movie.title.toLowerCase().includes(searchLower) ||
+        movie.genre.toLowerCase().includes(searchLower) ||
+        movie.director.toLowerCase().includes(searchLower) ||
+        movie.cast.some((actor) => actor.toLowerCase().includes(searchLower)) ||
+        movie.year.toString().includes(searchTerm);
+
+      const matchesGenre =
+        selectedGenre === "All" || movie.genre === selectedGenre;
+      return matchesSearch && matchesGenre;
+    });
+
+    // then sort the filtered results
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "rating":
+          return b.rating - a.rating;
+        case "year":
+          return b.year - a.year;
+        case "genre":
+          return a.genre.localeCompare(b.genre);
+        case "title":
+        default:
+          return a.title.localeCompare(b.title);
+      }
+    });
+  }, [movies, searchTerm, selectedGenre, sortBy]);
 
   const genres = ["All", ...new Set(movies.map((movie) => movie.genre))];
 
@@ -111,13 +157,6 @@ const BollywoodMovies = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-
-            {searchTerm && (
-              <p className="search-results">
-                Founded {filteredMovies.length} movie
-                {filteredMovies.length !== 1 ? "s" : ""} for "{searchTerm}"
-              </p>
-            )}
           </div>
 
           <div className="filter-section">
@@ -135,22 +174,35 @@ const BollywoodMovies = () => {
             </div>
           </div>
 
-          {searchTerm ||
-            (selectedGenre !== "All" && (
-              <button
-                className="clear-filters"
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedGenre("All");
-                }}
-              >
-                Clear All Filters
-              </button>
-            ))}
+          <div className="sort-section">
+            <label htmlFor="sort-select">Sort by:</label>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="title">Title (A-Z)</option>
+              <option value="rating">Rating (High - Low)</option>
+              <option value="year">Year (Newest First)</option>
+              <option value="genre">Genre (A-Z)</option>
+            </select>
+          </div>
+
+          {searchTerm && selectedGenre !== "All" && (
+            <button
+              className="clear-filters"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedGenre("All");
+              }}
+            >
+              Clear All Filters
+            </button>
+          )}
 
           <div className="movies-grid">
-            {filteredMovies.length > 0 ? (
-              filteredMovies.map((movie) => (
+            {sortedAndFilteredMovies.length > 0 ? (
+              sortedAndFilteredMovies.map((movie) => (
                 <div
                   className={`movie-card ${getRatingCategory(movie.rating)}`}
                   kay={movie.id}
